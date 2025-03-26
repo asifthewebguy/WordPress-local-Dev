@@ -1,0 +1,61 @@
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: ${CONTAINER_NAME}-wordpress
+    depends_on:
+      - db
+    ports:
+      - "8000:80"
+    env_file:
+      - .env
+    environment:
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_SMTP_HOST: ${WORDPRESS_SMTP_HOST}
+      WORDPRESS_SMTP_PORT: ${WORDPRESS_SMTP_PORT}
+      WORDPRESS_DEBUG: 1
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./wordpress/wp-content:/var/www/html/wp-content
+      - ./config/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+      - ./logs:/var/log
+
+  db:
+    image: mysql:8.0
+    container_name: ${CONTAINER_NAME}-mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ${CONTAINER_NAME}-phpmyadmin
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: ${CONTAINER_NAME}-mailhog
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP server
+
+volumes:
+  wordpress_data:
+  db_data:
